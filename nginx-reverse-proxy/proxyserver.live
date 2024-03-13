@@ -1,0 +1,25 @@
+server {
+    listen 80;  # Adjust port if needed
+    listen 443;	
+    server_name  ~^(?<subdomain>[^.]+).seethis.live;  
+    # Catches all subdomains under seethis.live
+
+    location ~ ^/$ {
+        #include proxy_params;
+        proxy_pass https://pub-1c940085ef3d402fa634338033ea31b8.r2.dev/__build/$subdomain/index.html;
+        proxy_ssl_server_name on;
+    }
+
+    location ~ ^/(.*)$ {
+        set $a https://pub-1c940085ef3d402fa634338033ea31b8.r2.dev/__build/$subdomain/$1;
+        proxy_pass $a;
+        proxy_ssl_server_name on;
+    }
+
+    location /resolve {
+        resolver 8.8.8.8 valid=60s;
+        proxy_pass https://pub-1c940085ef3d402fa634338033ea31b8.r2.dev/;
+    }
+    
+}
+
