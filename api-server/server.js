@@ -51,8 +51,10 @@ app.post('/build', async (req, res) => {
         const getDetails = await getGitDetails(userName, repoName)
         if (getDetails?.size > MAX_GIT_SIZE) throw Error("Repo is too large!")
         // console.log(getDetails)
-        await gitProducerChannel.assertQueue(BUILDQUEUE)
-        await gitProducerChannel.sendToQueue(BUILDQUEUE, Buffer.from(gitURL));
+        await gitProducerChannel.assertQueue(BUILDQUEUE, {durable: true})
+        await gitProducerChannel.sendToQueue(BUILDQUEUE, Buffer.from(gitURL), {
+            persistent: true
+          });
         res.json(body)
     } catch (e) {
         res.status(400).json({error: e.message})

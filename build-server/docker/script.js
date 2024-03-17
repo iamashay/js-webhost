@@ -70,5 +70,6 @@ async function runExecCommand(title, command, options = {}) {
     console.log(`Deploy successfull! (${deployTimeTaken}s)`);
   } catch (error) {
     console.error(error.message);
+    throw new Error("Exiting the deployment")
   }
 })();
