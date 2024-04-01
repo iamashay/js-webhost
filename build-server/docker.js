@@ -1,6 +1,7 @@
 const Docker = require('dockerode');
 const { Writable } = require('node:stream');
-
+const {Mutex, withTimeout, Semaphore} = require('async-mutex');
+const {DockerError} = require('./error')
 const MAX_UPTIME = 300
 const DOCKER_LIMIT = 2
 const docker = new Docker({
@@ -9,6 +10,10 @@ const docker = new Docker({
     port: 2375,
     version: 'v1.41'
 });
+
+
+const assignDockerInstanceMutex = withTimeout(new Semaphore(2), 300000, new DockerError('Waiting for docker timedout'))
+//console.log(deleteContainerMutex)
 
 class DockerOutputLog extends Writable {
     constructor() {
@@ -31,31 +36,31 @@ class DockerOutputLog extends Writable {
 
 const deleteUnusableContainers = async  () => {
     //deletes containers if they are exited or up for more than 2 minutes
-    const listContainers = await getContainersByImage({image: "build-image"})
-    for (const container of listContainers){
-        const uptime = Math.floor((+new Date() / 1000) - container.Created)
-        const {Id, State} = container
-        //console.log(uptime)
-        const dockerContainer = docker.getContainer(Id)
-        console.log(listContainers)
-        if (State == 'running' && uptime > MAX_UPTIME) {
-            dockerContainer.remove({force: true}, (err, data) =>   {
-                if (err) throw err
+    try {
+        const listContainers = await getContainersByImage({image: "build-image"})
+        for (const container of listContainers){
+            const uptime = Math.floor((+new Date() / 1000) - container.Created)
+            const {Id, State} = container
+            //console.log(uptime)
+            const dockerContainer = docker.getContainer(Id)
+            console.log(listContainers)
+            if (State == 'running' && uptime > MAX_UPTIME) {
+                await dockerContainer.remove({force: true})
                 console.log(`Time exceeded (${uptime}s) ${Id} deleted!`)
-            })
-        } else if (State == 'running') {
-            console.log(`${Id} is running since ${uptime}s!`)
-        } else if (State != 'removing') {
-            dockerContainer.remove({force: true}, (err, data) =>   {
-                if (err) throw err
-                console.log(`Removed ${dockerContainer.id} of ${State} status!`)
-            })
-        } else {
-            console.log(`Unknown ${dockerContainer.id} with ${State} found`)
-
+            } else if (State == 'running') {
+                console.log(`${Id} is running since ${uptime}s!`)
+            } else if (State != 'removing') {
+                await dockerContainer.remove({force: true})
+                console.log(`Removed ${Id} of ${State} status!`)
+            } else {
+                console.log(`Unknown ${Id} with ${State} found`)
+    
+            }
         }
+    } catch (e) {
+        console.log("Error deleting the containers"+e)
+        throw e
     }
-
 } 
 
 //deleteUnusableContainers()
@@ -73,22 +78,40 @@ async function initiateContainer({Env, image}) {
 //initiateContainer({Env: ["GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git"], image: 'build-image'})
 
 const getContainersByImage = async ({image}) => {
-    return docker.listContainers({ 
+    
+    try {
+        const listContainers =  await docker.listContainers({ 
             all: true, 
             filters: JSON.stringify({ancestor: [image]})
         })
+        return listContainers
+    } catch (e) {
+        console.error(`Error getting list of containers ${e}`)
+        throw e
+    } 
+    
 }
 
 const assignDockerInstance = async ({gitURL, image, Env}) => {
-    await deleteUnusableContainers()
-    const containerList = await getContainersByImage({image})
-    if (containerList.length >= DOCKER_LIMIT) throw new Error("No instances available.")
-    console.log(containerList)
-    console.log("Creating a container for "+gitURL)
-    const [result, newContainer] = await initiateContainer({gitURL, image, Env})
-    if (!result?.StatusCode) throw new Error("Error initalizing a container")
-    console.log(`Installation ID: ${newContainer.id}`)
-    return newContainer
+
+    //if (assignDockerInstanceMutex.getValue() <= 0) throw new DockerError("No docker instance available for use!")
+    await assignDockerInstanceMutex.acquire()
+    try {
+        await deleteUnusableContainers()
+        const containerList = await getContainersByImage({image})
+        if (containerList.length >= DOCKER_LIMIT) throw new DockerError(`Limit error, more than ${DOCKER_LIMIT} are on use`)
+        console.log(containerList)
+        console.log("Creating a container for "+gitURL)
+        const [result, newContainer] = await initiateContainer({gitURL, image, Env})
+        if (!result?.StatusCode) throw new Error("Error initalizing a container")
+        console.log(`Installation ID: ${newContainer.id}`)
+        return newContainer
+    } catch (e) {
+        throw e
+    } finally {
+        assignDockerInstanceMutex.release()
+    }
+
 }
 // assignDockerInstance({gitURL: 'GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git' , image: 'build-image', Env: ['GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git']})
 

@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy
 
 ENV NODE_VERSION=20.11.1
 ENV NVM_VER=v0.39.7

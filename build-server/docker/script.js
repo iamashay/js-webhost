@@ -7,6 +7,7 @@ const SOURCE_PATH = path.join(__dirname, 'output', BUILD_FOLDER)
 
 const getGitDetails = async (userName, repoName) => {
   try {
+      //console.log(userName, repoName)
       const response = await fetch(`https://api.github.com/repos/${userName}/${repoName}`)
       if (response.status !== 200) throw Error("No repo found!")
       return response.json()

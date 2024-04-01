@@ -1,11 +1,11 @@
 const amqplib = require('amqplib');
-require('dotenv').config()
+import 'dotenv/config'
+
 
 const {RABBITMQ} = process.env
 
-const queueClient = async () => {
+export const queueClient = async () => {
     const conn = await amqplib.connect(RABBITMQ);
     return conn
 }   
 
-module.exports = {queueClient}
