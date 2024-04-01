@@ -1,8 +1,8 @@
-const express = require('express')
-const {queueClient} = require('./queue/queueClient')
+import express from 'express'
+import {queueClient} from './queue/queueClient'
 const app = express()
-require('dotenv').config()
-const z = require("zod");
+import 'dotenv/config'
+import z from "zod";
 
 const {BUILDQUEUE, MAX_GIT_SIZE} = process.env
 
