@@ -8,6 +8,27 @@
       "when": 1711911364964,
       "tag": "0000_outstanding_the_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1712165299247,
+      "tag": "0001_friendly_bastion",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1712169738769,
+      "tag": "0002_short_sue_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1712170043620,
+      "tag": "0003_tough_chronomancer",
+      "breakpoints": true
     }
   ]
 }

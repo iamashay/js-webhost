@@ -1,11 +1,9 @@
-const amqplib = require('amqplib');
-import 'dotenv/config'
+import amqplib from "amqplib";
+import "dotenv/config";
 
-
-const {RABBITMQ} = process.env
+const { RABBITMQ } = process.env;
 
 export const queueClient = async () => {
-    const conn = await amqplib.connect(RABBITMQ);
-    return conn
-}   
-
+  const conn = await amqplib.connect(RABBITMQ);
+  return conn;
+};
