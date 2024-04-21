@@ -1,9 +1,9 @@
 const { spawn, exec } = require('child_process');
-const cwd = '/home/app/output'
 const path = require('path')
 const {uploadFile} = require('./S3')
 const {PROJECT_ID, BUILD_FOLDER, GIT_REPOSITORY_URL, MAX_GIT_SIZE} = process.env
-const SOURCE_PATH = path.join(__dirname, 'output', BUILD_FOLDER)
+const cwd = '/home/app/output/'+PROJECT_ID
+const SOURCE_PATH = path.join(__dirname, 'output', PROJECT_ID, BUILD_FOLDER)
 
 const getGitDetails = async (userName, repoName) => {
   try {
@@ -61,7 +61,7 @@ async function runExecCommand(title, command, options = {}) {
     await runExecCommand('Clone github', `git clone ${GIT_REPOSITORY_URL} ${cwd};`)
     // Run npm install
     await runExecCommand('Installing Packages', 'npm install', {cwd});
-    setTimeout(()=> 1, 60000)
+    //setTimeout(()=> 1, 60000)
     // Run npm build after successful installation
     await runExecCommand('Building Project', 'npm run build', {cwd});
     // Upload project to S3

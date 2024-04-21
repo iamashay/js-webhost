@@ -157,9 +157,8 @@ app.post("/build", isLoggedIn, async (req, res) => {
         slug: projects.slug,
         gitURL: projects.gitURL,
         id: projects.id,
-        status: projects.status,
       });
-    console.log(createProject);
+    //console.log(createProject);
     if (createProject.length !== 1)
       throw new Error("Some error occured, new project more than one or none");
     const newProject = createProject[0];

@@ -12,7 +12,9 @@ const mime = require("mime-types");
 
 const SOURCE_PATH = path.join(__dirname, 'home')
 
-const {ACCOUNT_ID, ACCESS_KEY_ID, SECRET_ACCESS_KEY, PROJECT_ID = Math.floor(Math.random() * 10)} = process.env
+const {ACCOUNT_ID, ACCESS_KEY_ID, SECRET_ACCESS_KEY, PROJECT_ID } = process.env
+
+if (!PROJECT_ID) PROJECT_ID = Math.floor(Math.random() * 10)
 
 const S3 = new S3Client({
     region: "auto",

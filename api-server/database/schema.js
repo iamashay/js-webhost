@@ -8,8 +8,16 @@ export const projects = pgTable("projects", {
   }),
   gitURL: text("giturl").notNull(),
   slug: text("slug").unique(undefined, { nulls: "distinct" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const deployments = pgTable("deployments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  project: uuid("projectid").references(() => projects.id, {
+    'onDelete': 'set null'
+  }),
   status: text("status", {
-    enum: ["Initial", "Queue", "Build", "Deployed", "Stopped", "Error"],
+    enum: ["Initial", "Queue", "Building", "Built", "Deploying", "Deployed", "Stopped", "Error", "Redeploying"],
   }).default("Initial"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -47,4 +55,13 @@ export const session = pgTable("session", {
   sid: text('sid').primaryKey(),
   sess: json('sess'),
   expire: timestamp('expire')
+});
+
+export const deploymentLogs = pgTable("deployment_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  deployment: uuid("deploymentid").references(() => deployments.id, {
+    'onDelete': 'set null'
+  }),
+  log: text("log"),
+  createdAt: timestamp("created_at").defaultNow(),
 });

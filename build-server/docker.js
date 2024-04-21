@@ -1,16 +1,16 @@
-const Docker = require('dockerode');
-const { Writable } = require('node:stream');
-const {Mutex, withTimeout, Semaphore} = require('async-mutex');
-const {DockerError} = require('./error')
+import Docker from 'dockerode';
+import { Writable } from 'node:stream';
+import {Mutex, withTimeout, Semaphore} from 'async-mutex'
+import {DockerError}  from './error.js'
 const MAX_UPTIME = 300
 const DOCKER_LIMIT = 2
 const docker = new Docker({
     protocol:'http', 
     host: '127.0.0.1', 
     port: 2375,
-    version: 'v1.41'
+    version: 'v1.42'
 });
-
+import {updateDeploymentStatus, uploadDeploymentLog} from './lib.js'
 
 const assignDockerInstanceMutex = withTimeout(new Semaphore(2), 300000, new DockerError('Waiting for docker timedout'))
 //console.log(deleteContainerMutex)
@@ -65,13 +65,23 @@ const deleteUnusableContainers = async  () => {
 
 //deleteUnusableContainers()
 
-async function initiateContainer({Env, image}) {
+async function initiateContainer({Env, image, projectId}) {
     const myStream = new DockerOutputLog();
-    const runConatiner = await docker.run(image, [], myStream, {
-        Env
+    const runContainer = await docker.run(image, [], myStream, {
+        Env,
+        HostConfig: {
+            Mounts: [
+              {
+                Type: 'bind',
+                Source: 'I:\\Temp\\'+projectId,
+                Target: '/home/app/output/',
+                ReadOnly: false,
+              },
+            ],
+          },
     })
-    console.log(myStream)
-    return runConatiner
+    //console.log(myStream)
+    return [runContainer, myStream?.toString()]
 
 }
 
@@ -92,23 +102,25 @@ const getContainersByImage = async ({image}) => {
     
 }
 
-const assignDockerInstance = async ({gitURL, image, Env}) => {
+export const assignDockerInstance = async ({deploymentId, gitURL, image, Env}) => {
 
     //if (assignDockerInstanceMutex.getValue() <= 0) throw new DockerError("No docker instance available for use!")
     await assignDockerInstanceMutex.acquire()
+    await updateDeploymentStatus({id: deploymentId, status: 'Building'})
     try {
         await deleteUnusableContainers()
         const containerList = await getContainersByImage({image})
         if (containerList.length >= DOCKER_LIMIT) throw new DockerError(`Limit error, more than ${DOCKER_LIMIT} are on use`)
         console.log(containerList)
         console.log("Creating a container for "+gitURL)
-        const [result, newContainer] = await initiateContainer({gitURL, image, Env})
-        if (!result?.StatusCode) throw new Error("Error initalizing a container")
-        console.log(`Installation ID: ${newContainer.id}`)
-        return newContainer
-    } catch (e) {
-        throw e
-    } finally {
+        const [container, buildLog] = await initiateContainer({gitURL, image, Env})
+        await updateDeploymentStatus({id: deploymentId, status: 'Deployed'})
+        uploadDeploymentLog({deployment: deploymentId, log: buildLog})
+        console.log(container, "StatusCode" in container)
+        if (container?.length === 0) throw new Error("Error initalizing a container")
+        console.log(`Installation ID: ${container[1].id}`)
+        return container
+    }  finally {
         assignDockerInstanceMutex.release()
     }
 
@@ -119,4 +131,3 @@ const assignDockerInstance = async ({gitURL, image, Env}) => {
 // setTimeout(() => assignDockerInstance({gitURL: 'GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git' , image: 'build-image', Env: ['GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git']}), 6000)
 //getContainers()
 
-module.exports = {assignDockerInstance}

@@ -1,8 +1,9 @@
-const {queueClient} = require('./queue/queueClient.js')
-require('dotenv').config()
-const {assignDockerInstance} = require('./docker.js')
-const workerpool = require('workerpool');
-const {DockerError} = require('./error')
+import {queueClient} from './queue/queueClient.js'
+import 'dotenv/config'
+import {assignDockerInstance} from'./docker.js'
+import workerpool from 'workerpool'
+import {DockerError} from './error.js'
+import { createDeployement, updateDeploymentStatus } from './lib.js'
 
 
 const pool = workerpool.pool({
@@ -21,21 +22,30 @@ const queueSys = async () => {
   ch1.consume(BUILDQUEUE, async (msg) => {
     if (msg !== null) {
       console.log('Recieved a deployment link:', msg.content.toString());
-      const githubURL = msg.content.toString()
+      const data = msg.content.toString()
       // console.log(msg)
       //ch1.ack(msg);
+      let deploymentId;
       try {
-        const deployInstance = await assignDockerInstance({gitURL: githubURL , image: 'build-image', Env: ['GIT_REPOSITORY_URL='+githubURL]})
+        const project = JSON.parse(data)
+        const {gitURL, id, slug} = project
+        const newDeployment = await createDeployement({id})
+        deploymentId = newDeployment.id
+        console.log("Initiated deployment: "+deploymentId)
+
+        const deployInstance = await assignDockerInstance({gitURL, id, deploymentId, image: 'build-image', Env: ['GIT_REPOSITORY_URL='+gitURL, 'PROJECT_ID='+slug]})
         //console.log(initiatePool)
         ch1.ack(msg)
       } catch(err){
         if (err instanceof DockerError) {
           console.log(err.message)
+          if (deploymentId) await updateDeploymentStatus({id: deploymentId, status: "Requeued"})
           setTimeout(() => ch1.nack(msg, undefined, true), 120000)
           return
         }
-        console.log(err.name)
+        console.log(err)
         ch1.reject(msg, false)
+        if (deploymentId) await updateDeploymentStatus({id: deploymentId, status: "Error"})
         console.log("Deployment halted")
       }
       

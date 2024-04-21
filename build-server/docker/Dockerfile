@@ -20,7 +20,7 @@ COPY ./script.js script.js
 COPY ./S3.js S3.js
 COPY ./.env .
 
-RUN npm install
+RUN npm install --no-bin-links
 
 RUN chmod +x script.js
 ENTRYPOINT ["node","--env-file=.env", "/home/app/script.js" ]
