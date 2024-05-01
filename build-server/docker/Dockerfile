@@ -13,14 +13,5 @@ RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN node --version
 RUN npm --version
-WORKDIR /home/app
+WORKDIR /home/app/output
 RUN mkdir /root/.ssh && chmod 0700 /root/.ssh && ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts 
-COPY ./package*.json .
-COPY ./script.js script.js
-COPY ./S3.js S3.js
-COPY ./.env .
-
-RUN npm install --no-bin-links
-
-RUN chmod +x script.js
-ENTRYPOINT ["node","--env-file=.env", "/home/app/script.js" ]

@@ -62,6 +62,7 @@ export const deploymentLogs = pgTable("deployment_logs", {
   deployment: uuid("deploymentid").references(() => deployments.id, {
     'onDelete': 'set null'
   }),
-  log: text("log"),
+  outputLog: text("outputlog"),
+  errorLog: text("errorlog"),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -1,7 +1,10 @@
 import Docker from 'dockerode';
 import { Writable } from 'node:stream';
 import {Mutex, withTimeout, Semaphore} from 'async-mutex'
-import {DockerError}  from './error.js'
+import {DeploymentError, DockerError}  from './error.js'
+import path from 'path'
+import fs from 'fs'
+
 const MAX_UPTIME = 300
 const DOCKER_LIMIT = 2
 const docker = new Docker({
@@ -10,7 +13,9 @@ const docker = new Docker({
     port: 2375,
     version: 'v1.42'
 });
+
 import {updateDeploymentStatus, uploadDeploymentLog} from './lib.js'
+import { uploadFiles } from './S3.js';
 
 const assignDockerInstanceMutex = withTimeout(new Semaphore(2), 300000, new DockerError('Waiting for docker timedout'))
 //console.log(deleteContainerMutex)
@@ -65,23 +70,51 @@ const deleteUnusableContainers = async  () => {
 
 //deleteUnusableContainers()
 
-async function initiateContainer({Env, image, projectId}) {
-    const myStream = new DockerOutputLog();
-    const runContainer = await docker.run(image, [], myStream, {
-        Env,
-        HostConfig: {
-            Mounts: [
-              {
-                Type: 'bind',
-                Source: 'I:\\Temp\\'+projectId,
-                Target: '/home/app/output/',
-                ReadOnly: false,
-              },
-            ],
-          },
-    })
-    //console.log(myStream)
-    return [runContainer, myStream?.toString()]
+async function initiateContainer({Env, gitURL, image, projectId}) {
+    const containerOutputLog = new DockerOutputLog();
+    const containerErrLog = new DockerOutputLog();
+    const sourcePath = path.join('I:', 'Temp', projectId)
+    const targetPath = path.posix.join('/', 'home', 'app', 'output')
+    const projectBuildCmd = 'npm run build'
+    await fs.promises.rm(sourcePath, { maxRetries: 2, retryDelay: 2000, recursive: true, force: true })
+    // const container = await docker.createContainer({
+    //     Image: image,
+    //     Env,
+    //     Cmd: ['/bin/bash', '-c', 'ls'],
+    //     Tty: true,
+    //     HostConfig: {
+    //         Mounts: [
+    //           {
+    //             Type: 'bind',
+    //             Source: sourcePath,
+    //             Target: targetPath,
+    //             ReadOnly: false,
+    //           },
+    //         ],
+    //     },
+    // })
+    // container.attach({stream: true, stdout: true, stderr: true}, function (err, stream) {
+    //     stream.pipe(process.stdout);
+    // });
+    const container = await docker.run(image, ['bash', '-c', `git clone --quiet ${gitURL} ${targetPath} && echo "Downloaded project from git" && npm config set update-notifier false && npm --loglevel=error i && echo "NPM package installed!" && ${projectBuildCmd} && echo "Project Built Successfully"`], [containerOutputLog, containerErrLog], {
+            //Env,
+            Tty: false,
+            HostConfig: {
+                Memory: 2e+8,
+                AutoRemove: true,
+                Mounts: [
+                  {
+                    Type: 'bind',
+                    Source: sourcePath,
+                    Target: targetPath,
+                    ReadOnly: false,
+                  },
+                ],
+            },
+        },
+    )
+    console.log(containerOutputLog,containerErrLog)
+    return {container, outputLog: containerOutputLog?.toString(), errorLog: containerErrLog?.toString()}
 
 }
 
@@ -102,7 +135,9 @@ const getContainersByImage = async ({image}) => {
     
 }
 
-export const assignDockerInstance = async ({deploymentId, gitURL, image, Env}) => {
+
+
+export const deployProject = async ({deploymentId, gitURL, image, Env, projectId, slug}) => {
 
     //if (assignDockerInstanceMutex.getValue() <= 0) throw new DockerError("No docker instance available for use!")
     await assignDockerInstanceMutex.acquire()
@@ -113,21 +148,17 @@ export const assignDockerInstance = async ({deploymentId, gitURL, image, Env}) =
         if (containerList.length >= DOCKER_LIMIT) throw new DockerError(`Limit error, more than ${DOCKER_LIMIT} are on use`)
         console.log(containerList)
         console.log("Creating a container for "+gitURL)
-        const [container, buildLog] = await initiateContainer({gitURL, image, Env})
+        const {container, outputLog, errLog, buildLocation} = await initiateContainer({gitURL, image, Env, projectId})
+        uploadDeploymentLog({deployment: deploymentId, outputLog, errLog})
+        if (!container) throw new Error("No container exists")
+        if (container[0].StatusCode != 0) throw new DeploymentError(`Container exited with ${container[0].StatusCode}`)
+        await updateDeploymentStatus({id: deploymentId, status: 'Built'})
+        await uploadFiles({projectId, slug});
         await updateDeploymentStatus({id: deploymentId, status: 'Deployed'})
-        uploadDeploymentLog({deployment: deploymentId, log: buildLog})
-        console.log(container, "StatusCode" in container)
-        if (container?.length === 0) throw new Error("Error initalizing a container")
-        console.log(`Installation ID: ${container[1].id}`)
-        return container
+        //console.log(`Installation ID: ${container[1].id}`)
+        return true
     }  finally {
         assignDockerInstanceMutex.release()
     }
 
 }
-// assignDockerInstance({gitURL: 'GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git' , image: 'build-image', Env: ['GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git']})
-
-// setTimeout(() => assignDockerInstance({gitURL: 'GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git' , image: 'build-image', Env: ['GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git']}), 3000)
-// setTimeout(() => assignDockerInstance({gitURL: 'GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git' , image: 'build-image', Env: ['GIT_REPOSITORY_URL=https://github.com/iamashay/ShoppingApp.git']}), 6000)
-//getContainers()
-

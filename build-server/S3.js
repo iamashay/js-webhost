@@ -1,20 +1,17 @@
-const {
+import {
     S3Client,
     ListBucketsCommand,
     ListObjectsV2Command,
     GetObjectCommand,
     PutObjectCommand
-} = require("@aws-sdk/client-s3")
-const fsp = require('fs').promises
-const {createReadStream} = require('fs')
-const path = require('path')
-const mime = require("mime-types");
+} from "@aws-sdk/client-s3"
+import fsp  from 'fs/promises'
+import {createReadStream} from 'fs'
+import path from 'path'
+import mime from "mime-types"
 
-const SOURCE_PATH = path.join(__dirname, 'home')
 
-const {ACCOUNT_ID, ACCESS_KEY_ID, SECRET_ACCESS_KEY, PROJECT_ID } = process.env
-
-if (!PROJECT_ID) PROJECT_ID = Math.floor(Math.random() * 10)
+const {ACCOUNT_ID, ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUILD_PATH } = process.env
 
 const S3 = new S3Client({
     region: "auto",
@@ -25,19 +22,23 @@ const S3 = new S3Client({
     },
 });
 
-async function uploadFile(directory) {
-  const getFolderContents = await fsp.readdir(directory, {recursive: true})
+export async function uploadFiles({projectId, slug}) {
+  const buildLocation = path.join(BUILD_PATH, projectId, "dist")
+  console.log(buildLocation)
+  const getFolderContents = await fsp.readdir(buildLocation, {recursive: true})
   // console.log(getFolderContents)
-  for (file of getFolderContents) {
-    const filePath = path.join(directory, file)
-    if ((await fsp.lstat(filePath)).isDirectory()) continue;
+  for (let file of getFolderContents) {
+    const filePath = path.join(buildLocation, file)
+    //console.log(await fsp.lstat(filePath))
+    const fileStat = await fsp.lstat(filePath)
+    if (fileStat.isDirectory()) continue
     file = file.replaceAll("\\", "/")
     process.stdout.write(`Uploading ${file}: `)
     const startTime = performance.now()
     const baseFile = path.basename(filePath)
     const command = new PutObjectCommand({
       Bucket: 'webhosting',
-      Key: `__build/${PROJECT_ID}/${file}`,
+      Key: `__build/${slug}/${file}`,
       Body: createReadStream(filePath),
       ContentType: mime.lookup(filePath) || "text/plain",
     })
@@ -46,12 +47,13 @@ async function uploadFile(directory) {
     const endTime = performance.now()
     if (upload['$metadata']?.httpStatusCode !== 200){
         process.stdout.write('Failed')
-        throw Error(`Uploading ${baseFile} failed`)
+        throw Error(`${projectId} : Uploading ${baseFile} failed`)
     }
     const timeTakenSec = ((endTime - startTime) / 1000).toFixed(1)
     process.stdout.write(`Success (${timeTakenSec}s)`)
     console.log('')
   }
+  console.log(`${projectId} : Successfully uploaded!`)
 }
 //uploadFile()
 
@@ -63,4 +65,3 @@ async function main() {
     );
 }
 
-module.exports = {uploadFile}

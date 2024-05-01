@@ -5,3 +5,11 @@ export class DockerError extends Error {
     }
 }
 
+
+export class DeploymentError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = "DeploymentError";
+    }
+}
+

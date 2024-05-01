@@ -1,8 +1,8 @@
 import {queueClient} from './queue/queueClient.js'
 import 'dotenv/config'
-import {assignDockerInstance} from'./docker.js'
+import {deployProject} from'./deployment.js'
 import workerpool from 'workerpool'
-import {DockerError} from './error.js'
+import {DockerError, DeploymentError} from './error.js'
 import { createDeployement, updateDeploymentStatus } from './lib.js'
 
 
@@ -33,7 +33,7 @@ const queueSys = async () => {
         deploymentId = newDeployment.id
         console.log("Initiated deployment: "+deploymentId)
 
-        const deployInstance = await assignDockerInstance({gitURL, id, deploymentId, image: 'build-image', Env: ['GIT_REPOSITORY_URL='+gitURL, 'PROJECT_ID='+slug]})
+        const deployInstance = await deployProject({gitURL, id, slug, projectId: id, deploymentId, image: 'build-image', Env: ['GIT_REPOSITORY_URL='+gitURL, 'PROJECT_ID='+slug]})
         //console.log(initiatePool)
         ch1.ack(msg)
       } catch(err){
@@ -41,6 +41,10 @@ const queueSys = async () => {
           console.log(err.message)
           if (deploymentId) await updateDeploymentStatus({id: deploymentId, status: "Requeued"})
           setTimeout(() => ch1.nack(msg, undefined, true), 120000)
+          return
+        } else if (err instanceof DeploymentError) {
+          if (deploymentId) await updateDeploymentStatus({id: deploymentId, status: "Error"})
+          ch1.reject(msg, false)
           return
         }
         console.log(err)
