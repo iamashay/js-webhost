@@ -9,6 +9,7 @@ import fsp  from 'fs/promises'
 import {createReadStream} from 'fs'
 import path from 'path'
 import mime from "mime-types"
+import { DeploymentError } from "./error.js"
 
 
 const {ACCOUNT_ID, ACCESS_KEY_ID, SECRET_ACCESS_KEY, BUILD_PATH } = process.env
@@ -22,9 +23,14 @@ const S3 = new S3Client({
     },
 });
 
-export async function uploadFiles({projectId, slug}) {
-  const buildLocation = path.join(BUILD_PATH, projectId, "dist")
-  console.log(buildLocation)
+export async function uploadFiles({projectId, slug, buildFolder, localOutLogger, localErrLogger}) {
+  const buildLocation = path.join(BUILD_PATH, projectId, buildFolder)
+  try {
+    try {
+      await fsp.access(buildLocation)
+    } catch {
+      throw new Error("Cannot access build folder: "+buildFolder)
+    }
   const getFolderContents = await fsp.readdir(buildLocation, {recursive: true})
   // console.log(getFolderContents)
   for (let file of getFolderContents) {
@@ -34,6 +40,7 @@ export async function uploadFiles({projectId, slug}) {
     if (fileStat.isDirectory()) continue
     file = file.replaceAll("\\", "/")
     process.stdout.write(`Uploading ${file}: `)
+    localOutLogger.info(`Uploading ${file}`)
     const startTime = performance.now()
     const baseFile = path.basename(filePath)
     const command = new PutObjectCommand({
@@ -46,22 +53,19 @@ export async function uploadFiles({projectId, slug}) {
     //console.log(upload)
     const endTime = performance.now()
     if (upload['$metadata']?.httpStatusCode !== 200){
+        localOutLogger.error(`Uploading ${file} failed`)
         process.stdout.write('Failed')
         throw Error(`${projectId} : Uploading ${baseFile} failed`)
     }
     const timeTakenSec = ((endTime - startTime) / 1000).toFixed(1)
-    process.stdout.write(`Success (${timeTakenSec}s)`)
-    console.log('')
+    localOutLogger.info(`Success! ${timeTakenSec}s \n`, () => {})
+    process.stdout.write(`Success (${timeTakenSec}s) \n`)
   }
-  console.log(`${projectId} : Successfully uploaded!`)
-}
-//uploadFile()
-
-async function main() {
-    console.log(
-        await S3.send(
-           new ListObjectsV2Command({ Bucket: 'webhosting' })
-        )
-    );
+  } finally {
+    // uploadOutputLog.unpipe(containerOutputLog)
+    // uploadErrLog.unpipe(containerErrLog)
+    // uploadOutputLog.end()
+    // uploadErrLog.end()
+  }
 }
 

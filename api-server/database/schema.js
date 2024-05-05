@@ -1,5 +1,8 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, uuid, timestamp, boolean, json } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, timestamp, boolean, json, pgEnum,  } from "drizzle-orm/pg-core";
+
+export const projectType = pgEnum('projecttype', ['Plain', 'React'])
+export const deploymentStatus = pgEnum('deploymentstatus',["Initial", "Queue", "Building", "Built", "Deploying", "Deployed", "Stopped", "Error", "Redeploying"] )
 
 export const projects = pgTable("projects", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -9,6 +12,9 @@ export const projects = pgTable("projects", {
   gitURL: text("giturl").notNull(),
   slug: text("slug").unique(undefined, { nulls: "distinct" }),
   createdAt: timestamp("created_at").defaultNow(),
+  buildScript: text("buildScript").default(null),
+  buildFolder: text("buildfolder").default(null),
+  projectType: projectType('projectype').default("React")
 });
 
 export const deployments = pgTable("deployments", {
@@ -16,10 +22,10 @@ export const deployments = pgTable("deployments", {
   project: uuid("projectid").references(() => projects.id, {
     'onDelete': 'set null'
   }),
-  status: text("status", {
-    enum: ["Initial", "Queue", "Building", "Built", "Deploying", "Deployed", "Stopped", "Error", "Redeploying"],
-  }).default("Initial"),
+  status: deploymentStatus('status').default("Initial"),
   createdAt: timestamp("created_at").defaultNow(),
+  buildScript: text("buildScript").default(null),
+  buildFolder: text("buildfolder").default(null)
 });
 
 export const users = pgTable("users", {

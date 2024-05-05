@@ -19,6 +19,8 @@
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.30.7",
     "postgres": "^3.4.4",
+    "winston": "^3.13.0",
+    "winston-transport": "^4.7.0",
     "workerpool": "^9.1.0"
   },
   "devDependencies": {

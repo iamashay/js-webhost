@@ -53,6 +53,8 @@ const buildSchema = z.object({
     .includes("github", { message: "Not a valid github URL" })
     .trim()
     .url({ message: "Not a valid URL" }),
+  buildScript: z.string().trim().optional(),
+  buildFolder: z.string().trim().optional(),
 });
 
 const loginSchema = z.object({
@@ -138,7 +140,7 @@ app.post("/auth/register", async (req, res, next) => {
 app.post("/build", isLoggedIn, async (req, res) => {
   try {
     const body = await buildSchema.parseAsync(req.body);
-    const { gitURL } = body;
+    const { gitURL, buildScript, buildFolder } = body;
     const [userName, repoName] = getUserRepoName(gitURL);
     //console.log(userName, repoName)
     const getDetails = await getGitDetails(userName, repoName);
@@ -148,16 +150,17 @@ app.post("/build", isLoggedIn, async (req, res) => {
       gitURL,
       slug: await generateSlug(),
       userId: req.user.id,
+      buildFolder,
+      buildScript
     };
-    console.log(project);
-    const createProject = await db
-      .insert(projects)
-      .values(project)
-      .returning({
-        slug: projects.slug,
-        gitURL: projects.gitURL,
-        id: projects.id,
-      });
+    //console.log(project);
+    const createProject = await db.insert(projects).values(project).returning({
+      slug: projects.slug,
+      gitURL: projects.gitURL,
+      id: projects.id,
+      buildFolder: projects.buildFolder,
+      buildScript: projects.buildScript
+    });
     //console.log(createProject);
     if (createProject.length !== 1)
       throw new Error("Some error occured, new project more than one or none");
