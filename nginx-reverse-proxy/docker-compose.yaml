@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+  nginx:
+    image: nginx:latest
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./conf-template/:/etc/nginx/templates
+      - ./public:/var/www/html
+      - ./logs:/var/log/nginx
+    environment:
+      - NGINX_SERVER_NAME=webhosting.local
+      - R2_STORAGE_LINK=https://pub-5c94567f3fghfgh3433503dgh1b9.r2.dev
