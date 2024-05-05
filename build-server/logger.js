@@ -18,9 +18,11 @@ const loggerConfig = {
           winston.format.colorize(),
           winston.format.simple()
         )
-      })
-
+      }),
     ],
+    exceptionHandlers: [
+      new winston.transports.File({ filename: './log/exceptions.log' })
+    ]
 }
 
 export const logger = winston.createLogger(loggerConfig);
