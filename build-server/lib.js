@@ -1,5 +1,5 @@
-import {db} from '../api-server/database/db.js'
-import {projects, deployments, deploymentLogs} from '../api-server/database/schema.js'
+import {db} from '../database/db.js'
+import {projects, deployments, deploymentLogs} from '../database/schema.js'
 import { eq } from "drizzle-orm";
 import { Transform, Writable } from 'node:stream';
 

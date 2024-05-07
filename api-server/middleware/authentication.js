@@ -1,5 +1,5 @@
-import { db } from "../database/db.js";
-import { users } from "../database/schema.js";
+import { db } from "../../database/db.js";
+import { users } from "../../database/schema.js";
 
 export const isLoggedIn = (req, res, next) => {
     //console.log(req)

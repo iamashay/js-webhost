@@ -1,6 +1,6 @@
 import namor from 'namor'
-import {db} from './database/db.js'
-import {projects} from './database/schema.js'
+import {db} from '../database/db.js'
+import {projects} from '../database/schema.js'
 import { eq } from "drizzle-orm";
 
 export const generateSlug = async () => {
