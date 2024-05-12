@@ -1,5 +1,7 @@
 import { projects } from "../../database/schema.js";
 import { buildSchema } from "../validation/project.js";
+import { db } from "../../database/db.js";
+import { generateSlug } from "../lib.js";
 
 export const buildController = async (req, res) => {
     try {

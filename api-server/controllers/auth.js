@@ -1,6 +1,9 @@
 import { registerSchema } from "../validation/auth.js";
 import { passport } from "../authentication.js";
 import { db } from "../../database/db.js";
+import bcrypt from "bcryptjs"
+import { users } from "../../database/schema.js";
+import { or, eq } from "drizzle-orm";
 
 export const loginController = (req, res, next) => {
   passport.authenticate("local", function (err, user, info) {

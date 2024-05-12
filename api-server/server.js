@@ -3,15 +3,9 @@ import { queueClient } from "./queue/queueClient.js";
 import session from "express-session";
 import connectPG from "connect-pg-simple";
 import { passport } from "./authentication.js";
-import { db } from "../database/db.js";
-import { users, projects } from "../database/schema.js";
 const app = express();
 import "dotenv/config";
-import { eq, and, or } from "drizzle-orm";
-import bcrypt from "bcryptjs";
 import cors from "cors";
-import { isLoggedIn } from "./middleware/authentication.js";
-import { generateSlug } from "./lib.js";
 import authRouter from './routes/auth.js'
 import projectRouter from './routes/project.js'
 const { BUILDQUEUE, MAX_GIT_SIZE } = process.env;
