@@ -5,6 +5,6 @@ const router = express.Router()
 
 router.use(isLoggedIn)
 
-router.post('build', buildController)
+router.post('/build', buildController)
 
 export default router

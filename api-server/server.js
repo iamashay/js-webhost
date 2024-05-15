@@ -44,13 +44,9 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
-
-
-
-
 app.use("/auth", authRouter);
 
-app.post("/project", projectRouter);
+app.use("/project", projectRouter);
 
 app.use((err, req, res, next) => {
   res.status(400).json({error: "Unknown error occured processing your request!"})

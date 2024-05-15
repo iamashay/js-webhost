@@ -1,7 +1,18 @@
 import { projects } from "../../database/schema.js";
 import { buildSchema } from "../validation/project.js";
 import { db } from "../../database/db.js";
-import { generateSlug } from "../lib.js";
+import { generateSlug } from "../lib/utils.js";
+import { getGitDetails, getUserRepoName } from "../lib/github.js";
+import { queueClient } from "../queue/queueClient.js";
+const {MAX_GIT_SIZE, BUILDQUEUE} = process.env
+
+let conn, gitProducerChannel;
+
+(async () => {
+  //console.log(queueClient)
+  conn = await queueClient();
+  gitProducerChannel = await conn.createChannel();
+})();
 
 export const buildController = async (req, res) => {
     try {
