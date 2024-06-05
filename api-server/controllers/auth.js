@@ -52,3 +52,26 @@ export const registerController = async (req, res, next) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+
+export const identityController = async (req, res, next) => {
+  try {
+    if (!req.isAuthenticated()) throw new Error("User not logged in!")
+    return res.status(200).json({ user: req?.user });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const logoutController = async (req, res, next) => {
+  try {
+    req.logout(function(err) {
+      if (err) throw err
+      return res.status(200).json({ success: "User logged out!" });
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+
