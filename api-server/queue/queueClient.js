@@ -24,7 +24,7 @@ export const queueClient = async () => {
     } catch (error) {
         console.error('Error connecting to RabbitMQ:', error.message);
         // Retry connection after a delay
-        setTimeout(connect, 1000);
+        setTimeout(connection, 1000);
     }
 }
 
