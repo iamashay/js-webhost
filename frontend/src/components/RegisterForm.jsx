@@ -1,5 +1,5 @@
 'use client'
-import { SessionContext, registerUser } from '@/utils/SessionProvider';
+import { SessionContext, registerUser } from '@/components/SessionProvider';
 import { useRouter } from 'next/navigation';
 import { useContext, useState } from 'react';
 

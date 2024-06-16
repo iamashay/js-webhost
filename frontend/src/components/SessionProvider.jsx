@@ -11,33 +11,36 @@ let initialData = {
     user: null,
 }
 
-const VERIFY_IDENTITY_INTERVAL = 60000
+const VERIFY_IDENTITY_INTERVAL = 5000
 
-const reducer = (state, action) => {
+const userReducer = (state, action) => {
     switch (action.type) {
-        case "LOGIN":
+        case "LOGIN": {
             const data = {
                 isAuthenticated: true,
                 user: action.payload,
             }
             localStorage.setItem('sesssionData', JSON.stringify(data))
             return data;
-            
-        case "LOGOUT":
+            }
+        case "LOGOUT":{
            localStorage.clear();
             return {
                 isAuthenticated: false,
                 user: null,
-            };
-        case "VERIFY":
-            return {
+            };}
+        case "VERIFY":{
+            const data = {
                 isAuthenticated: action.isAuthenticated,
                 user: action.payload,
-        };
-        case "COOKIE":
-            return action.payload;
-        default:
+            }
+            localStorage.setItem('sesssionData', JSON.stringify(data))
+            return data}
+        case "COOKIE":{
+            return action.payload;}
+        default:{
             return state;
+        }
     }
 };
 
@@ -48,7 +51,7 @@ const getUserIdentity = async ({dispatchUser, router}) => {
         const getSession = await fetch(`${PUBLIC_API_URL}/auth/identity`, {
             credentials: 'include',
         })
-        //console.log(getSession)
+        console.log(getSession)
         const jsonBody = await getSession.json()
         const userData = jsonBody?.user
         dispatchUser({
@@ -58,10 +61,12 @@ const getUserIdentity = async ({dispatchUser, router}) => {
         })
         if (!userData) throw new Error("No user data found!")
         } catch(e) {
-            dispatchUser({
-                type: 'LOGOUT',
-            })
-            router.push('/')
+            if (e.message === 'No user data found!') {
+                dispatchUser({
+                    type: 'LOGOUT',
+                })
+                router.push('/')
+            }
         }
 }
 
@@ -180,7 +185,7 @@ export function SessionProvider({children}) {
 
 
 
-    const [userState, dispatchUser] = useReducer(reducer, initialData)
+    const [userState, dispatchUser] = useReducer(userReducer, initialData)
 
     useEffect(() => {
         const user = localStorage.getItem('sesssionData')
@@ -194,7 +199,7 @@ export function SessionProvider({children}) {
 
     useEffect(() => {
         const timer = setInterval(() => {
-            console.log(userState)
+            console.log(userState, userState?.isAuthenticated)
             if (userState?.isAuthenticated) getUserIdentity({dispatchUser, router})
         }, VERIFY_IDENTITY_INTERVAL)
         return () => clearInterval(timer)

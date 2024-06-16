@@ -9,3 +9,4 @@ export const buildSchema = z.object({
   buildScript: z.string().trim().optional(),
   buildFolder: z.string().trim().optional(),
 });
+

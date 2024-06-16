@@ -1,6 +1,6 @@
 'use client'
 import { useContext } from "react"
-import { logoutUser, SessionContext } from "@/utils/SessionProvider"
+import { logoutUser, SessionContext } from "@/components/SessionProvider"
 import UserBoxSkeleton from "./UserBoxSkeleton"
 import Link from "next/link"
 import { useRouter } from "next/navigation"

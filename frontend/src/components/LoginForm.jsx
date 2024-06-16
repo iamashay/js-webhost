@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation'
 
 import { useContext, useState } from "react"
-import { SessionContext, loginUser } from '@/utils/SessionProvider';
+import { SessionContext, loginUser } from '@/components/SessionProvider';
 
 
 

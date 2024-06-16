@@ -8,6 +8,7 @@ import "dotenv/config";
 import cors from "cors";
 import authRouter from './routes/auth.js'
 import projectRouter from './routes/project.js'
+import deploymentRouter from './routes/deployment.js'
 import fs from "fs"
 import https from "https"
 
@@ -56,7 +57,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/auth", authRouter);
 
-app.use("/project", projectRouter);
+app.use("/projects", projectRouter);
+app.use("/deployments", deploymentRouter);
 
 app.use((err, req, res, next) => {
   res.status(400).json({error: "Unknown error occured processing your request!"})
