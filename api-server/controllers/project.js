@@ -84,3 +84,28 @@ export const viewProjectController = async (req, res) => {
     
   }
 }
+
+export const viewAllProjectsController = async (req, res) => {
+  try {
+    const userId = req.user.id
+    //console.log(userName, repoName)
+    const project = await db.select({
+      id: projects.id,
+      slug: projects.slug,
+      gitURL: projects.gitURL,
+      createdAt: projects.createdAt,
+      buildScript: projects.buildScript,
+      buildFolder: projects.buildFolder,
+      projectType: projects.projectType
+    }).from(projects).where(eq(projects.userId, userId))
+    console.log(project)
+    if (project?.length === 0 || !project) throw new Error('No projects found!')
+    return res.status(200).json(project);
+  } catch (e) {
+    if (e.code === '22P02')
+      return res.status(400).json({ error: 'Invalid project id' });
+    console.log(e)
+    return res.status(400).json({ error: 'Some error occured while finding the project' });
+  }
+}
+

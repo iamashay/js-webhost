@@ -72,7 +72,7 @@ const RowAction = ({href}) => {
 }
 
 
-export default function DeploymentTable({defaultData}) {
+export default function  ({defaultData}) {
 
     const [data, setData] = useState(() => [...defaultData])
     const [rowSelection, setRowSelection] = useState({})
@@ -83,13 +83,13 @@ export default function DeploymentTable({defaultData}) {
     }
 
     const columns = useMemo( () => [
-        columnHelper.accessor('id', {
+        columnHelper.accessor('slug', {
             cell: info => info.getValue(),
             header: () => <span>ID</span>,
         }),
-        columnHelper.accessor('status', {
+        columnHelper.accessor('projectType', {
             cell: info =>  info.getValue(),
-            header: () => <span>Status</span>,
+            header: () => <span>Type</span>,
         }),
         columnHelper.accessor('createdAt', {
             header: () => 'Created At',
@@ -97,7 +97,7 @@ export default function DeploymentTable({defaultData}) {
         }),
         columnHelper.display({
             id: 'actions',
-            cell: info => <RowAction href={`/deployments/${info.row.original.id}`} />,
+            cell: info => <RowAction href={`/projects/${info.row.original.id}`} />,
           }),
     ], [])
 
@@ -142,11 +142,10 @@ export default function DeploymentTable({defaultData}) {
             </tr>
         ))}
         </tbody>
-        
-
-
     </table>
+
     <TableNavigation table={table}></TableNavigation>
+
     </>
     )
 }

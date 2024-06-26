@@ -21,3 +21,13 @@ export const getDeployment = async (deploymentId) => {
     })
     return await deployment.json()
 }
+
+export const getAllProjects = async (projectId) => {
+    const projects = await fetch(`${API_URL}/projects/`, {
+        headers: {
+           'Accept': 'application/json',
+           'Cookie': cookies().toString()
+        }
+    })
+    return await projects.json()
+}
