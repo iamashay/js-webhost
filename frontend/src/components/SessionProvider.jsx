@@ -194,12 +194,12 @@ export function SessionProvider({children}) {
         } catch (e) {
             console.log("Not a valid user!")
         }
+        if (userState?.isAuthenticated) getUserIdentity({dispatchUser, router})
     }, [])
 
 
     useEffect(() => {
         const timer = setInterval(() => {
-            console.log(userState, userState?.isAuthenticated)
             if (userState?.isAuthenticated) getUserIdentity({dispatchUser, router})
         }, VERIFY_IDENTITY_INTERVAL)
         return () => clearInterval(timer)

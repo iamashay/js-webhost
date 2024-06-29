@@ -6,6 +6,7 @@ import OpenLinkIco from '@/assets/open-link.svg'
 import Image from 'next/image';
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 const PROJECT_HOST = process.env.PROJECT_HOST
+
 export default function ProjectForm({projectData, create = true}) {
     const router = useRouter()
     const editorRef = useRef(null);
@@ -21,10 +22,11 @@ export default function ProjectForm({projectData, create = true}) {
             // console.log(title, slug, body)
             let formMethod = 'POST'
             if (!create) {
-                formatData.id = projectData.id
+                formatData.projectId = projectData.id
                 formMethod = 'PUT'
             }
-            const sendData = await fetch(`${API_URL}/projects/build`, {
+            console.log(formatData, projectData)
+            const sendData = await fetch(`${API_URL}/projects/`, {
                 method: formMethod,
                 headers: {
                     'Accept': 'application/json',

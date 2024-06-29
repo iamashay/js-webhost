@@ -25,7 +25,7 @@ export default async function EditProject ({params}) {
 
     return (
         <main className='flex my-5 items-center flex-col'>
-            <h1 className="mb-8">New Project</h1>
+            <h1 className="mb-8">Edit Project</h1>
             <section className="w-3/4">
                 <ProjectForm projectData={projectData} create={false} />
             </section>

@@ -8,5 +8,6 @@ export const buildSchema = z.object({
     .url({ message: "Not a valid URL" }),
   buildScript: z.string().trim().optional(),
   buildFolder: z.string().trim().optional(),
+  projectId: z.string().trim().optional()
 });
 

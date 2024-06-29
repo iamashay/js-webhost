@@ -16,7 +16,7 @@ let conn, gitProducerChannel;
   gitProducerChannel = await conn.createChannel();
 })();
 
-export const buildController = async (req, res) => {
+export const newProjectController = async (req, res) => {
     try {
       const body = await buildSchema.parseAsync(req.body);
       const { gitURL, buildScript, buildFolder } = body;
@@ -44,15 +44,15 @@ export const buildController = async (req, res) => {
       if (createProject.length !== 1)
         throw new Error("Some error occured, new project more than one or none");
       const newProject = createProject[0];
-      const projectDataString = JSON.stringify(newProject);
-      await gitProducerChannel.assertQueue(BUILDQUEUE, { durable: true });
-      await gitProducerChannel.sendToQueue(
-        BUILDQUEUE,
-        Buffer.from(projectDataString),
-        {
-          persistent: true,
-        }
-      );
+      // const projectDataString = JSON.stringify(newProject);
+      // await gitProducerChannel.assertQueue(BUILDQUEUE, { durable: true });
+      // await gitProducerChannel.sendToQueue(
+      //   BUILDQUEUE,
+      //   Buffer.from(projectDataString),
+      //   {
+      //     persistent: true,
+      //   }
+      // );
       return res.status(200).json(newProject);
     } catch (e) {
       if (e instanceof ZodError)
@@ -73,7 +73,8 @@ export const viewProjectController = async (req, res) => {
       createdAt: projects.createdAt,
       buildScript: projects.buildScript,
       buildFolder: projects.buildFolder,
-      projectType: projects.projectType
+      projectType: projects.projectType,
+      id: projects.id,
     }).from(projects).where(and(eq(projects.userId, userId), eq(projects.id, projectId)))
     if (project?.length === 0 || !project) throw new Error('No project found!')
     return res.status(200).json(project[0]);
@@ -109,3 +110,33 @@ export const viewAllProjectsController = async (req, res) => {
   }
 }
 
+export const  updateProjectController = async (req, res) => {
+  try {
+    const body = await buildSchema.parseAsync(req.body);
+    const userId = req.user.id
+    const { projectId, gitURL, buildScript, buildFolder } = body;
+    const [userName, repoName] = getUserRepoName(gitURL);
+    //console.log(userName, repoName)
+    const getDetails = await getGitDetails(userName, repoName);
+    if (getDetails?.size > MAX_GIT_SIZE) throw Error("Repo is too large!");
+    // console.log(getDetails)
+    const project = {
+      gitURL,
+      buildFolder,
+      buildScript
+    };
+    console.log(project, body);
+    const updateProject = await db.update(projects).set(project).where(and(eq(projectId, projects.id))).returning({id: projects.id})
+    console.log(updateProject);
+    if (updateProject.length !== 1)
+      throw new Error("Some error occured, couldn't save the project");
+    const newProject = updateProject[0];
+    return res.status(200).json(newProject);
+  } catch (e) {
+    console.log(e)
+    if (e instanceof ZodError)
+      return res.status(400).json({ error: e.errors[0].message });
+      
+    return res.status(400).json({ error: e.message });
+  }
+}
