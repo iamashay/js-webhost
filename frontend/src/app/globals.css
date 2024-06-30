@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .dashboard-head {
+        @apply p-2 my-4 shadow-sm w-fit rounded-md border border-gray-200
+    }
+    #nprogress .bar {
+        z-index: 99999 !important;
+    }
+}

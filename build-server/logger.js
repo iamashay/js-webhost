@@ -52,7 +52,7 @@ export class StringTransport extends Transport {
   
     log(info, callback) {
       // Collect log messages as strings
-      this.logString += `${info.level}: ${info.message}\n`;
+      this.logString += `${info.level}: ${info.message}`;
       callback();
     }
   

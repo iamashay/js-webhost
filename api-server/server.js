@@ -8,7 +8,16 @@ import "dotenv/config";
 import cors from "cors";
 import authRouter from './routes/auth.js'
 import projectRouter from './routes/project.js'
+import deploymentRouter from './routes/deployment.js'
+import fs from "fs"
+import https from "https"
+
 const { BUILDQUEUE, MAX_GIT_SIZE } = process.env;
+
+const options = {
+  key: fs.readFileSync('./security/127.0.0.1+1-key.pem'),
+  cert: fs.readFileSync('./security/127.0.0.1+1.pem')
+}
 
 let conn, gitProducerChannel;
 (async () => {
@@ -17,11 +26,11 @@ let conn, gitProducerChannel;
 })();
 
 const port = process.env.PORT || 3000;
-//app.use(cors({
-//   origin: ['http://localhost:3003'],
-//   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-//   credentials: true,
-// }));
+app.use(cors({
+   origin: ['http://localhost:4000'],
+   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+   credentials: true,
+}));
 
 app.use(
   session({
@@ -33,7 +42,9 @@ app.use(
     }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24,
-      secure: false,
+      secure: true,
+      sameSite: 'none',
+      httpOnly: true,
     },
   })
 );
@@ -46,10 +57,11 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/auth", authRouter);
 
-app.use("/project", projectRouter);
+app.use("/projects", projectRouter);
+app.use("/deployments", deploymentRouter);
 
 app.use((err, req, res, next) => {
   res.status(400).json({error: "Unknown error occured processing your request!"})
 })
 
-app.listen(port, console.log("Server Started on port " + port));
+https.createServer(options, app).listen(port,  console.log("Server Started on port " + port))

@@ -1,0 +1,24 @@
+const SVGComponent = (props) => (
+  <svg
+    id="Layer_1"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+    x="0px"
+    y="0px"
+    viewBox="0 0 36 32"
+    style={{
+      enableBackground: "new 0 0 36 32",
+    }}
+    xmlSpace="preserve"
+    {...props}
+  >
+    <style type="text/css">{"\n\t.st0{fill:#FFFFFF;}\n"}</style>
+    <g id="surface1">
+      <path
+        className="st0"
+        d="M27.3,11.4l-7.9,9.9c-0.8,0.9-1.9,0.9-2.6,0l-7.9-9.9c-0.8-0.9-0.4-1.7,0.8-1.7h16.9 C27.7,9.8,28.1,10.5,27.3,11.4z"
+      />
+    </g>
+  </svg>
+);
+export default SVGComponent;
