@@ -12,6 +12,7 @@ import { useMemo, useState, useEffect, useRef } from 'react'
 import ViewIcon from '@/assets/view-icon.svg'
 import Image from 'next/image'
 import TableNavigation from './TableNavigation'
+import { formatRelative, subDays } from 'date-fns'
 
 
 const columnHelper = createColumnHelper()
@@ -93,7 +94,11 @@ export default function  ({defaultData}) {
         }),
         columnHelper.accessor('createdAt', {
             header: () => 'Created At',
-            cell: info => info.renderValue(),
+            cell: info => {
+              if (!info?.renderValue()) return "NA"
+              const createDt = new Date(info.renderValue()).toLocaleString()
+              return createDt
+            },
         }),
         columnHelper.display({
             id: 'actions',
@@ -135,7 +140,7 @@ export default function  ({defaultData}) {
         {table.getRowModel().rows.map(row => (
             <tr key={row.id}>
             {row.getVisibleCells().map(cell => (
-                <td key={cell.id} className='p-1'>
+                <td key={cell.id} className='p-1' suppressHydrationWarning>
                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
             ))}

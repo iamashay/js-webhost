@@ -1,9 +1,9 @@
 'use client'
 import React, { useRef, useState } from 'react';
 import toast from 'react-hot-toast'
-import { useRouter } from 'next/navigation';
 import OpenLinkIco from '@/assets/open-link.svg'
 import Image from 'next/image';
+import { useRouter } from 'next-nprogress-bar';
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 const PROJECT_HOST = process.env.PROJECT_HOST
 

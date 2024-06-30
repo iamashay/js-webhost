@@ -20,7 +20,7 @@ export default function Home() {
         <section className="hero py-10 text-center">
           <h1 className="text-4xl font-bold">Welcome, {user.username}!</h1>
           <p className="text-lg">Host your frontend JavaScript projects or static HTML pages with ease!</p>
-          <Link href="/projects/new" className="btn bg-yellow-500 px-6 py-2 mt-4 inline-block">Get Started</Link>
+          <Link href="/projects/" className="btn bg-yellow-500 px-6 py-2 mt-4 inline-block">Get Started</Link>
         </section>
       }
 

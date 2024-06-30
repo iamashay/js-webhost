@@ -1,11 +1,12 @@
-import { projectType, projects } from "../../database/schema.js";
-import { buildSchema } from "../validation/project.js";
+import { projectType, projects, users } from "../../database/schema.js";
+import { buildProjectSchema, newProjectSchema, updateProjectSchema } from "../validation/project.js";
 import { db } from "../../database/db.js";
 import { generateSlug } from "../lib/utils.js";
 import { getGitDetails, getUserRepoName } from "../lib/github.js";
 import { queueClient } from "../queue/queueClient.js";
 import { ZodError } from "zod";
-import { DrizzleError, and, eq } from "drizzle-orm";
+import { DrizzleError, and, desc, eq } from "drizzle-orm";
+import { createDeployement, updateDeploymentStatus } from "../lib/project.js";
 const {MAX_GIT_SIZE, BUILDQUEUE} = process.env
 
 let conn, gitProducerChannel;
@@ -18,13 +19,13 @@ let conn, gitProducerChannel;
 
 export const newProjectController = async (req, res) => {
     try {
-      const body = await buildSchema.parseAsync(req.body);
+      const body = await newProjectSchema.parseAsync(req.body);
       const { gitURL, buildScript, buildFolder } = body;
       const [userName, repoName] = getUserRepoName(gitURL);
       //console.log(userName, repoName)
       const getDetails = await getGitDetails(userName, repoName);
       if (getDetails?.size > MAX_GIT_SIZE) throw Error("Repo is too large!");
-      // console.log(getDetails)
+      // console.log(getDetails)d
       const project = {
         gitURL,
         slug: await generateSlug(),
@@ -98,7 +99,7 @@ export const viewAllProjectsController = async (req, res) => {
       buildScript: projects.buildScript,
       buildFolder: projects.buildFolder,
       projectType: projects.projectType
-    }).from(projects).where(eq(projects.userId, userId))
+    }).from(projects).where(eq(projects.userId, userId)).orderBy(desc(projects.createdAt))
     console.log(project)
     if (project?.length === 0 || !project) throw new Error('No projects found!')
     return res.status(200).json(project);
@@ -112,7 +113,7 @@ export const viewAllProjectsController = async (req, res) => {
 
 export const  updateProjectController = async (req, res) => {
   try {
-    const body = await buildSchema.parseAsync(req.body);
+    const body = await updateProjectSchema.parseAsync(req.body);
     const userId = req.user.id
     const { projectId, gitURL, buildScript, buildFolder } = body;
     const [userName, repoName] = getUserRepoName(gitURL);
@@ -134,6 +135,44 @@ export const  updateProjectController = async (req, res) => {
     return res.status(200).json(newProject);
   } catch (e) {
     console.log(e)
+    if (e instanceof ZodError)
+      return res.status(400).json({ error: e.errors[0].message });
+      
+    return res.status(400).json({ error: e.message });
+  }
+}
+
+export const projectDeployController = async (req, res) => {
+  try {
+    const body = await buildProjectSchema.parseAsync(req.body);
+    const { projectId } = body;
+    const userId = req.user.id
+    const project = await db.query.projects.findFirst({
+      columns: {
+        slug: true,
+        gitURL: true,
+        id: true,
+        buildFolder: true,
+        buildScript: true
+      },
+      where: and(eq(projectId, projects.id), eq(userId, projects.userId))
+    })
+    console.log(project);
+    if (!project)
+      throw new Error("Some error occured, project unavailable!");
+    const projectDataString = JSON.stringify(project);
+    const deployment = await createDeployement({id: projectId})
+    await gitProducerChannel.assertQueue(BUILDQUEUE, { durable: true });
+    await gitProducerChannel.sendToQueue(
+      BUILDQUEUE,
+      Buffer.from(projectDataString),
+      {
+        persistent: true,
+      }
+    );
+    await updateDeploymentStatus({id: deployment.id, status: "Queue"})
+    return res.status(200).json(project);
+  } catch (e) {
     if (e instanceof ZodError)
       return res.status(400).json({ error: e.errors[0].message });
       
