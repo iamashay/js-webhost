@@ -3,7 +3,8 @@ import { passport } from "../authentication.js";
 import { db } from "../../database/db.js";
 import bcrypt from "bcryptjs"
 import { users } from "../../database/schema.js";
-import { or, eq } from "drizzle-orm";
+import { or, eq, DrizzleError } from "drizzle-orm";
+import { ZodError } from "zod";
 
 export const loginController = (req, res, next) => {
   passport.authenticate("local", function (err, user, info) {
@@ -21,7 +22,7 @@ export const loginController = (req, res, next) => {
       if (err) {
         return next(err);
       }
-      return res.status(200).json({ message: "authentication succeeded" });
+      return res.status(200).json({ message: "authentication succeeded", user });
     });
   })(req, res, next);
 };
@@ -44,11 +45,37 @@ export const registerController = async (req, res, next) => {
         password: hashPass,
         email,
       })
-      .returning({ id: users.id });
+      .returning({ id: users.id, username: users.username });
     if (newUser.length != 1)
       throw new Error("Some error occured, new user more than one or none");
-    return res.status(200).json({ token: newUser[0] });
+    return res.status(200).json({ ...newUser[0] });
+  } catch (error) {
+    //console.log(error)
+    if (error instanceof ZodError)
+      return res.status(500).json({ error: error.errors[0].message });
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+
+export const identityController = async (req, res, next) => {
+  try {
+    if (!req.isAuthenticated()) throw new Error("User not logged in!")
+    return res.status(200).json({ user: req?.user });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
 };
+
+export const logoutController = async (req, res, next) => {
+  try {
+    req.logout(function(err) {
+      if (err) throw err
+      return res.status(200).json({ success: "User logged out!" });
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+

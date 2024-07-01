@@ -1,10 +1,14 @@
 import express from 'express'
-import { buildController } from '../controllers/project.js'
+import { newProjectController, viewProjectController, viewAllProjectsController, updateProjectController, projectDeployController } from '../controllers/project.js'
 import { isLoggedIn } from '../middleware/authentication.js'
 const router = express.Router()
 
 router.use(isLoggedIn)
 
-router.post('/build', buildController)
+router.post('/', newProjectController)
+router.get('/:projectId', viewProjectController)
+router.get('/', viewAllProjectsController)
+router.put('/', updateProjectController)
+router.post('/deploy', projectDeployController)
 
 export default router

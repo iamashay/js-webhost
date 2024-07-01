@@ -48,11 +48,15 @@ export class StringTransport extends Transport {
     constructor(opts) {
       super(opts);
       this.logString = '';
-    }
+    } 
   
     log(info, callback) {
       // Collect log messages as strings
-      this.logString += `${info.level}: ${info.message}\n`;
+      if (info.source === "console") {
+        this.logString += `${info.level}: ${info.message}`;
+      } else {
+        this.logString += `${info.level}: ${info.message} \n`;
+      }
       callback();
     }
   
