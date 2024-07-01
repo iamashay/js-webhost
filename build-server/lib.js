@@ -1,6 +1,6 @@
 import {db} from '../database/db.js'
 import {projects, deployments, deploymentLogs} from '../database/schema.js'
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Transform, Writable } from 'node:stream';
 
 
@@ -31,11 +31,24 @@ export const uploadDeploymentLog = async ({deployment, outputLog, errorLog}) => 
     //console.log(insertLogs)
 }
 
+export const checkLatestDeployment = async ({deploymentId, projectId}) => {
+    if (!deploymentId || !projectId) throw new Error("Missing check deployment values")
+    const latestDeployment = await db.query.deployments.findFirst({
+        where: eq(deployments.project, projectId),
+        orderBy: desc(deployments.createdAt)
+    })
+    console.log(latestDeployment, projectId)
+    if (latestDeployment?.id === deploymentId) return true
+    throw new Error(`${deploymentId} is not the latest deployment. Discarding it.`) 
+    //console.log(insertLogs)
+}
+
 export class StreamLogger extends Transform {
-    constructor(logger, type) {
+    constructor(logger, type, source) {
         super()
         this.logger = logger    
         this.type = type
+        this.source = source
     }
 
     _transform(chunk, encoding, callback) {

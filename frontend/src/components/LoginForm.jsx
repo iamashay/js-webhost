@@ -1,6 +1,5 @@
 'use client'
-import { useRouter } from 'next/navigation'
-
+import { useRouter } from 'next-nprogress-bar';
 import { useContext, useState } from "react"
 import { SessionContext, loginUser } from '@/components/SessionProvider';
 

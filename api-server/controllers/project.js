@@ -160,8 +160,9 @@ export const projectDeployController = async (req, res) => {
     console.log(project);
     if (!project)
       throw new Error("Some error occured, project unavailable!");
-    const projectDataString = JSON.stringify(project);
     const deployment = await createDeployement({id: projectId})
+    project.deploymentId = deployment.id
+    const projectDataString = JSON.stringify(project);
     await gitProducerChannel.assertQueue(BUILDQUEUE, { durable: true });
     await gitProducerChannel.sendToQueue(
       BUILDQUEUE,

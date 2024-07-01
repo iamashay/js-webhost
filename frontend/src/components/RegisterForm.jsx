@@ -1,6 +1,6 @@
 'use client'
 import { SessionContext, registerUser } from '@/components/SessionProvider';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next-nprogress-bar';
 import { useContext, useState } from 'react';
 
 export default function RegisterForm() {
