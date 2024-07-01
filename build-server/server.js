@@ -2,7 +2,7 @@ import {queueClient} from './queue/queueClient.js'
 import 'dotenv/config'
 import {deployProject} from'./deployment.js'
 import {DockerError, DeploymentError} from './error.js'
-import { createDeployement, updateDeploymentStatus, uploadDeploymentLog, StreamLogger } from './lib.js'
+import { createDeployement, updateDeploymentStatus, uploadDeploymentLog, StreamLogger, checkLatestDeployment } from './lib.js'
 import { StringLogger, logger } from './logger.js'
 
 const BUILDQUEUE = process.env.BUILDQUEUE;
@@ -25,19 +25,24 @@ const queueSys = async () => {
         const project = JSON.parse(data)
         const {gitURL, id, slug, buildFolder, buildScript} = project
         //console.log(buildFolder)
-        const newDeployment = await createDeployement({id, buildFolder, buildScript})
-        deploymentId = newDeployment.id
+        //const newDeployment = await createDeployement({id, buildFolder, buildScript})
+        deploymentId = project.deploymentId
         //console.log("Initiated deployment: "+deploymentId)
-        logger.info("Initiated deployment: "+deploymentId)
+        logger.info("Deployment ID: "+deploymentId)
+        await checkLatestDeployment({deploymentId, projectId: id})
         const deployInstance = await deployProject({gitURL, id, slug, projectId: id, buildFolder, buildScript, deploymentId, localOutLogger, image: 'build-image', Env: ['GIT_REPOSITORY_URL='+gitURL, 'PROJECT_ID='+slug]})
         //console.log(initiatePool)
         ch1.ack(msg)
       } catch(err){
         localOutLogger.error("Deployment Halted")
+        if (err.code === "ECONNREFUSED") {
+          if (deploymentId) await updateDeploymentStatus({id: deploymentId, status: "Error"})
+          localOutLogger.error("Connection error: ECONNREFUSED")
+          return
+        }
         localOutLogger.error(err.message)
         if (err instanceof DockerError) {
           if (deploymentId) await updateDeploymentStatus({id: deploymentId, status: "Error"})
-          setTimeout(() => ch1.nack(msg, undefined, true), 120000)
           return
         } else if (err instanceof DeploymentError) {
           console.error(err)

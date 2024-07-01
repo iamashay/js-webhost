@@ -163,13 +163,9 @@ export const registerUser = async ({e, setLoading, dispatchUser, router}) => {
         if (registerResp?.status !== 200) {
             return toast.error(`${registerRespBody?.error}`)
         }
-        dispatchUser({
-            type: 'LOGIN',
-            payload: registerRespBody
-        })
-        toast.success("Signup success! Redirecting...")
+        toast.success("Signup success! Redirecting to login...")
         e?.target?.reset()
-        return router.push('/')
+        return router.push('/login')
     } catch (e) {
         toast.error("Some error occured!")
         setLoading(false)

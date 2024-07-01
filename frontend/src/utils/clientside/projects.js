@@ -15,6 +15,7 @@ export const getDeploymentLog = async (deploymentId) => { //client side only
 export const deployProject = async ({ projectId, setLoading, router }) => {
     //setLoading(false)
     const loadingMsg = toast.loading("Deploying project...")
+    setLoading(true)
     try {
         const deploy = await fetch(`${API_URL}/projects/deploy`, {
             method: 'POST',
@@ -35,5 +36,6 @@ export const deployProject = async ({ projectId, setLoading, router }) => {
     } finally {
         // setLoading(false)
         toast.dismiss(loadingMsg)
+        setLoading(false)
     }
 }
