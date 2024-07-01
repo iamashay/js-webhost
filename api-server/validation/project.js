@@ -1,24 +1,35 @@
 import z from "zod";
 
-export const newProjectSchema = z.object({
+export const ProjectSchema = z.object({
+  buildScript: z.string().trim().refine(value => {
+    // Ensure the string contains only one word (no spaces)
+    return /^\w+$/.test(value);
+  }, {
+      message: 'Invalid input for build script, provide only script name',
+  }).optional(),
+  buildFolder: z.string().trim().refine(value => {
+    // Ensure the string contains only one word (no spaces)
+    return /^\w+$/.test(value);
+  }, {
+      message: 'Invalid location provided for build folder. Use only name, no slashes',
+  }).optional(),
+})
+
+export const newProjectSchema = ProjectSchema.extend({
   gitURL: z
     .string()
     .includes("github", { message: "Not a valid github URL" })
     .trim()
     .url({ message: "Not a valid URL" }),
-  buildScript: z.string().trim().optional(),
-  buildFolder: z.string().trim().optional(),
   projectId: z.string().trim().optional()
 });
 
-export const updateProjectSchema = z.object({
+export const updateProjectSchema = ProjectSchema.extend({
   gitURL: z
     .string()
     .includes("github", { message: "Not a valid github URL" })
     .trim()
     .url({ message: "Not a valid URL" }).optional(),
-  buildScript: z.string().trim().optional(),
-  buildFolder: z.string().trim().optional(),
   projectId: z.string({required_error: "Project id is invalid"}).trim()
 });
 
