@@ -58,8 +58,8 @@ const deleteUnusableContainers = async  () => {
 //deleteUnusableContainers()
 
 async function initiateContainer({gitURL, image, projectId, buildScript, localOutLogger}) {
-    const outStream = new StreamLogger(localOutLogger, "info")
-    const errStream = new StreamLogger(localOutLogger, "error")
+    const outStream = new StreamLogger(localOutLogger, "info", "console")
+    const errStream = new StreamLogger(localOutLogger, "error", "console")
 
     try {
     const sourcePath = path.join('I:', 'Temp', projectId)
