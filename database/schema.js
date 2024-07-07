@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, uuid, timestamp, boolean, json, pgEnum,  } from "drizzle-orm/pg-core";
 
-export const projectType = pgEnum('projecttype', ['Plain', 'React'])
+export const projectType = pgEnum('projecttype', ['Static', 'React'])
 export const deploymentStatus = pgEnum('deploymentstatus',["Initial", "Queue", "Building", "Built", "Deploying", "Deployed", "Stopped", "Error", "Redeploying"] )
 
 export const projects = pgTable("projects", {

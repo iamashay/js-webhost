@@ -13,6 +13,7 @@ export const ProjectSchema = z.object({
   }, {
       message: 'Invalid location provided for build folder. Use only name, no slashes',
   }).optional(),
+  projectType: z.string().trim().optional()
 })
 
 export const newProjectSchema = ProjectSchema.extend({

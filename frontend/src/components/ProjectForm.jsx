@@ -8,6 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 const PROJECT_HOST = process.env.PROJECT_HOST
 
 export default function ProjectForm({projectData, create = true}) {
+    const [projectTypeState, setProjectTypeState] = useState(projectData?.projectType)
     const router = useRouter()
     const editorRef = useRef(null);
     const [saving, setSaving] = useState(false)
@@ -65,15 +66,25 @@ export default function ProjectForm({projectData, create = true}) {
                     <div className='flex gap-4 items-center'>
                         <label htmlFor="gitURL" className='w-32'>Github Link</label><input className='flex-grow border border-gray-300 my-2 p-1 shadow-sm text-sm' type="text" id="gitURL" name="gitURL" placeholder='Your github repository https git link' defaultValue={(projectData?.gitURL)}></input>
                     </div>
-                    <div className='flex gap-4 items-center hidden'>
-                        <label htmlFor="projectType" className='w-32' >Project Type</label><input className='flex-grow border border-gray-300 my-2 p-1 shadow-sm text-sm' type="text" id="projectType" name="projectType"  defaultValue={(projectData?.projectType)}></input>
+                    <div className='flex gap-4 items-center'>
+                        <label htmlFor="projectType" className='w-32'>Project Type</label>
+                        <select name="projectType" id="projectType" className='flex-grow border border-gray-300 my-2 p-1 shadow-sm text-sm' defaultValue={projectData?.projectType} onChange={(e) => {setProjectTypeState(e.target.value); console.log(projectTypeState, e.target.value)}}>
+                            <option value="Static">Static HTML (Only consists of static html or js files)</option>
+                            <option value="React">ReactJS Project</option>
+                        </select>
                     </div>
-                    <div className='flex gap-4 items-center'>
+                    {(projectTypeState === 'React') && (
+                    <>
+                        <div className='flex gap-4 items-center'>
                         <label htmlFor="buildScript" className='w-32'>NPM Build Script</label><input className='flex-grow border border-gray-300 my-2 p-1 shadow-sm text-sm' type="text" id="buildScript" name="buildScript" placeholder='Ex. build or dev (npm run build)' defaultValue={(projectData?.buildScript)}></input>
-                    </div> 
-                    <div className='flex gap-4 items-center'>
-                        <label htmlFor="buildFolder" className='w-32'>Build Folder</label><input className='flex-grow border border-gray-300 my-2 p-1 shadow-sm text-sm' type="text" id="buildFolder" name="buildFolder" placeholder='Folder name where output files are present' defaultValue={(projectData?.buildFolder)}></input>
-                    </div>  
+                        </div> 
+                        <div className='flex gap-4 items-center'>
+                            <label htmlFor="buildFolder" className='w-32'>Build Folder</label><input className='flex-grow border border-gray-300 my-2 p-1 shadow-sm text-sm' type="text" id="buildFolder" name="buildFolder" placeholder='Folder name where output files are present' defaultValue={(projectData?.buildFolder)}></input>
+                        </div> 
+                    </> 
+                    )}
+
+
                     <button type='submit' disabled={saving} className='self-end my-4 bg-sky-500 hover:bg-sky-700 px-5 py-2 text-sm leading-5 rounded-full font-semibold text-white'>Submit</button>
                 </form>
             )

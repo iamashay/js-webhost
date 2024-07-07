@@ -23,14 +23,22 @@ const queueSys = async () => {
       const [localOutLogger, outputLog] = StringLogger()
       try {
         const project = JSON.parse(data)
-        const {gitURL, id, slug, buildFolder, buildScript} = project
+        const {gitURL, id, slug, projectType} = project
+        let { buildFolder, buildScript } = project
+        let image;
+        if (projectType === 'Static') {
+          buildFolder = './'
+          image = 'static-image'
+        } else if (projectType === 'React') {
+          image = 'react-image'
+        }
         //console.log(buildFolder)
         //const newDeployment = await createDeployement({id, buildFolder, buildScript})
         deploymentId = project.deploymentId
         //console.log("Initiated deployment: "+deploymentId)
         logger.info("Deployment ID: "+deploymentId)
         await checkLatestDeployment({deploymentId, projectId: id})
-        const deployInstance = await deployProject({gitURL, id, slug, projectId: id, buildFolder, buildScript, deploymentId, localOutLogger, image: 'build-image', Env: ['GIT_REPOSITORY_URL='+gitURL, 'PROJECT_ID='+slug]})
+        const deployInstance = await deployProject({gitURL, id, slug, projectId: id, buildFolder, buildScript, deploymentId, localOutLogger, image})
         //console.log(initiatePool)
         ch1.ack(msg)
       } catch(err){

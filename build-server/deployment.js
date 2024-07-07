@@ -66,12 +66,23 @@ async function initiateContainer({gitURL, image, projectId, buildScript, localOu
     const targetPath = path.posix.join('/', 'home', 'app', 'output')
     const projectBuildCmd = 'npm run '+buildScript
     await fs.promises.rm(sourcePath, { maxRetries: 2, retryDelay: 2000, recursive: true, force: true })
-    const container = await docker.run(image, 
-        [
+    let containerCMD;
+    if(image === 'static-image') {
+        containerCMD = [
+            'bash', 
+            '-c',
+            `git clone ${gitURL} ${targetPath} && echo "Downloaded project from git"`
+        ]
+    } else {
+        containerCMD = [
             'bash', 
             '-c',
             `git clone --quiet ${gitURL} ${targetPath} && echo "Downloaded project from git" && npm config set update-notifier false && npm --loglevel=error i && echo "NPM package installed!" && ${projectBuildCmd} && echo "Project Built Successfully"`
-        ], 
+        ]
+    }
+    const container = await docker.run(image, 
+        containerCMD
+        , 
     [outStream, errStream], {
             //Env,
             Tty: false,
@@ -127,6 +138,7 @@ export const deployProject = async ({deploymentId, gitURL, image, Env, projectId
         //console.log(containerList)
         // console.log("Creating a container for "+gitURL)
         logger.info("Creating a container for "+gitURL)
+        
         const {container, iniOutputLog, iniErrLog} = await initiateContainer({gitURL, image, Env, projectId, buildScript, localOutLogger})
 
         if (!container) throw new Error("No container exists")

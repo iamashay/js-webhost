@@ -20,7 +20,7 @@ let conn, gitProducerChannel;
 export const newProjectController = async (req, res) => {
     try {
       const body = await newProjectSchema.parseAsync(req.body);
-      const { gitURL, buildScript, buildFolder } = body;
+      const { gitURL, buildScript, buildFolder, projectType } = body;
       const [userName, repoName] = getUserRepoName(gitURL);
       //console.log(userName, repoName)
       const getDetails = await getGitDetails(userName, repoName);
@@ -33,13 +33,10 @@ export const newProjectController = async (req, res) => {
         buildFolder,
         buildScript
       };
+      if (projectType) project.projectType = projectType
       //console.log(project);
       const createProject = await db.insert(projects).values(project).returning({
-        slug: projects.slug,
-        gitURL: projects.gitURL,
         id: projects.id,
-        buildFolder: projects.buildFolder,
-        buildScript: projects.buildScript
       });
       //console.log(createProject);
       if (createProject.length !== 1)
@@ -115,7 +112,7 @@ export const  updateProjectController = async (req, res) => {
   try {
     const body = await updateProjectSchema.parseAsync(req.body);
     const userId = req.user.id
-    const { projectId, gitURL, buildScript, buildFolder } = body;
+    const { projectId, gitURL, buildScript, buildFolder, projectType } = body;
     const [userName, repoName] = getUserRepoName(gitURL);
     //console.log(userName, repoName)
     const getDetails = await getGitDetails(userName, repoName);
@@ -124,8 +121,10 @@ export const  updateProjectController = async (req, res) => {
     const project = {
       gitURL,
       buildFolder,
-      buildScript
+      buildScript,
     };
+    if (projectType)
+      project.projectType = projectType
     console.log(project, body);
     const updateProject = await db.update(projects).set(project).where(and(eq(projectId, projects.id))).returning({id: projects.id})
     console.log(updateProject);
@@ -153,7 +152,8 @@ export const projectDeployController = async (req, res) => {
         gitURL: true,
         id: true,
         buildFolder: true,
-        buildScript: true
+        buildScript: true,
+        projectType: true
       },
       where: and(eq(projectId, projects.id), eq(userId, projects.userId))
     })

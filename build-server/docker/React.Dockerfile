@@ -15,3 +15,4 @@ RUN node --version
 RUN npm --version
 WORKDIR /home/app/output
 RUN mkdir /root/.ssh && chmod 0700 /root/.ssh && ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts 
+
