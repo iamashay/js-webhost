@@ -7,13 +7,14 @@ import {updateDeploymentStatus, StreamLogger, getGitDetails, getUserRepoName} fr
 import { uploadFiles } from './S3.js';
 import { logger } from './logger.js';
 
+const {DOCKER_HOST, DOCKER_PORT, DOCKER_PROTOCOL, DOCKER_VERSION} = process.env
 const MAX_UPTIME = 300
 const DOCKER_LIMIT = 2
 const docker = new Docker({
-    protocol:'http', 
-    host: '127.0.0.1', 
-    port: 2375,
-    version: 'v1.42'
+    protocol: DOCKER_PROTOCOL, 
+    host: DOCKER_HOST, 
+    port: DOCKER_PORT,
+    version: DOCKER_VERSION
 });
 
 const {MAX_GIT_SIZE} = process.env

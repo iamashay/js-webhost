@@ -56,8 +56,6 @@ export default function ProjectForm({projectData, create = true}) {
     if (!create)
         projectData.link = PROJECT_HOST?.replace('<custom>', projectData.slug)
 
-    console.log(projectData.link, PROJECT_HOST )
-
     return (
                 <form onSubmit={submitPost} method="post" className='flex flex-col'>
                     {!create && (
