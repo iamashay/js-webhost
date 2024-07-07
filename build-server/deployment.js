@@ -3,7 +3,7 @@ import {withTimeout, Semaphore} from 'async-mutex'
 import {DeploymentError, DockerError}  from './error.js'
 import path from 'path'
 import fs from 'fs'
-import {updateDeploymentStatus, StreamLogger} from './lib.js'
+import {updateDeploymentStatus, StreamLogger, getGitDetails, getUserRepoName} from './lib.js'
 import { uploadFiles } from './S3.js';
 import { logger } from './logger.js';
 
@@ -16,6 +16,7 @@ const docker = new Docker({
     version: 'v1.42'
 });
 
+const {MAX_GIT_SIZE} = process.env
 
 
 const assignDockerInstanceMutex = withTimeout(new Semaphore(2), 300000, new DockerError('Waiting for docker timedout'))
@@ -138,7 +139,10 @@ export const deployProject = async ({deploymentId, gitURL, image, Env, projectId
         //console.log(containerList)
         // console.log("Creating a container for "+gitURL)
         logger.info("Creating a container for "+gitURL)
-        
+        const [userName, repoName] = getUserRepoName(gitURL);
+        //console.log(userName, repoName)
+        const getDetails = await getGitDetails(userName, repoName);
+        if (getDetails?.size > MAX_GIT_SIZE) throw Error("Repo is too large!");
         const {container, iniOutputLog, iniErrLog} = await initiateContainer({gitURL, image, Env, projectId, buildScript, localOutLogger})
 
         if (!container) throw new Error("No container exists")

@@ -61,5 +61,29 @@ export class StreamLogger extends Transform {
         // resolve(result);  // Moved the resolve to the handler, which fires at the end of the stream
     }
 }
+
+export const getGitDetails = async (userName, repoName) => {
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${userName}/${repoName}`
+      );
+      if (response.status !== 200) throw Error("No repo found!");
+      return response.json();
+    } catch (e) {
+      console.error(e);
+      throw Error("Error getting git details");
+    }
+  };
+  
+  export const getUserRepoName = (giturl) => {
+    const girURLSplitArr = giturl.split("/");
+    const length = girURLSplitArr.length;
+    if (length < 1) throw Error("Not a valid github url");
+    return [
+      girURLSplitArr[length - 2],
+      girURLSplitArr[length - 1]?.replace(".git", ""),
+    ];
+  };
+  
 //uploadDeploymentLog({deployment: "2afe74dd-c342-4493-aa64-520cd08c9bd5", projectID: "df", log: "afaf"})
 //updateProjectStatus({status: 'asd', id: '7d4ba0a4-62fb-4c2f-8417-d3b8b432c2b6'})

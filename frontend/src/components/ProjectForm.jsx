@@ -5,7 +5,7 @@ import OpenLinkIco from '@/assets/open-link.svg'
 import Image from 'next/image';
 import { useRouter } from 'next-nprogress-bar';
 const API_URL = process.env.NEXT_PUBLIC_API_URL
-const PROJECT_HOST = process.env.PROJECT_HOST
+const PROJECT_HOST = process.env.NEXT_PUBLIC_PROJECT_HOST
 
 export default function ProjectForm({projectData, create = true}) {
     const [projectTypeState, setProjectTypeState] = useState(projectData?.projectType)
@@ -55,6 +55,8 @@ export default function ProjectForm({projectData, create = true}) {
     }
     if (!create)
         projectData.link = PROJECT_HOST?.replace('<custom>', projectData.slug)
+
+    console.log(projectData.link, PROJECT_HOST )
 
     return (
                 <form onSubmit={submitPost} method="post" className='flex flex-col'>
