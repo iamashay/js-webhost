@@ -43,6 +43,14 @@ MKCert has to be used inorder to make locally signed certificates as trusted. Th
   ./mkcert -install
   ```
 
+## Database Configs
+* Install all the modules
+  ```npm
+  npm install
+  ```
+* Edit the .env.example file with your configs and rename it to .env
+* Drizzle Kit can be used to push schema changes to the database.
+
 ## API Server
 * Move the certs generated earlier to security folder and replace them with the existing ones. Make sure to rename the newly generated certs with the same name of existing files.
 * Install all the modules
