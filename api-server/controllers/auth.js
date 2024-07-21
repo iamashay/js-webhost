@@ -6,6 +6,8 @@ import { users } from "../../database/schema.js";
 import { or, eq, DrizzleError } from "drizzle-orm";
 import { ZodError } from "zod";
 
+const {MAX_VERIFY_TIME} = process.env
+
 export const loginController = (req, res, next) => {
   passport.authenticate("local", function (err, user, info) {
     console.log(err, info, user);
@@ -78,4 +80,24 @@ export const logoutController = async (req, res, next) => {
   }
 };
 
+export const sendVerificationController = async (req, res, next) => {
+  try {
+    req.logout(function(err) {
+      if (err) throw err
+      return res.status(200).json({ success: "User logged out!" });
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const verificationController = async (req, res, next) => {
+  try {
+    const { token } = await req.body;
+    if (!token) throw new Error("Invalid verification token")
+    const verify = await db.query.users.findFirst()
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
 
