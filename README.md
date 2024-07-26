@@ -72,8 +72,9 @@ MKCert has to be used inorder to make locally signed certificates as trusted. Th
 * Edit the .env.example file with your configs and rename it to .env
 * Run the command to build required docker images from dockerfile
   ```
-  docker build -f Static.Dockerfile ./docker -t static-image;
-  docker build -f React.Dockerfile ./docker -t react-image;
+  cd build-server/docker
+  docker build . -f Static.Dockerfile -t static-image;
+  docker build . -f React.Dockerfile -t react-image;
   ```
 * Start the server with
   ```console
