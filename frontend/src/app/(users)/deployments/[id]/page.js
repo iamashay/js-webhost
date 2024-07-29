@@ -1,23 +1,27 @@
+
 import { getDeployment } from "@/utils/serverside/projects";
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
-const DeploymentLog = dynamic(() => import("@/components/DeploymentLog"), {ssr: false}) ;
+import { DeploymentInfo } from "@/components/Deployment";
+
+const statusDetails = [
+  { status: "Initial", text: "The project is initiated.", color: "bg-blue-500" },
+  { status: "Queue", text: "The project is queued in RabbitMQ.", color: "bg-yellow-500" },
+  { status: "Building", text: "The project is being processed.", color: "bg-gray-500" },
+  { status: "Built", text: "The project has been built. Deployment started.", color: "bg-teal-500" },
+  { status: "Deploying", text: "The project is being uploaded to the web server.", color: "bg-purple-500" },
+  { status: "Deployed", text: "The project has been successfully deployed.", color: "bg-green-500" },
+  { status: "Stopped", text: "The deployment has been stopped.", color: "bg-red-500" },
+  { status: "Error", text: "There was an error during deployment.", color: "bg-red-700" },
+];
 
 export default async function Deployment ({params}) {
   const {id} = params
   const deploymentData = await getDeployment(id)
-  const createdAt = new Date(deploymentData.createdAt)?.toLocaleDateString()
-  console.log(deploymentData, id)
+  //console.log(deploymentData, id)
+
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Deployment Information</h1>
-      <div className="border p-4 rounded-md mb-4">
-        <p><span className="font-semibold">Deployment ID:</span> {deploymentData.id}</p>
-        <p><span className="font-semibold">Deployment Date:</span> {createdAt}</p>
-        <p><span className="font-semibold">Deployment Status:</span> {deploymentData.status}</p>
-      </div>
-      <DeploymentLog deploymentId={id} />    
-    </div>
+      <DeploymentInfo data={deploymentData} statusDetails={statusDetails} />
   );
 };
 

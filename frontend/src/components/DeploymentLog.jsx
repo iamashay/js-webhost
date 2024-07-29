@@ -39,15 +39,15 @@ const LogDisplay = ({ logs }) => {
     );
   };
 
-export default async function DeploymentLog ({deploymentId}) {
+export default function DeploymentLog ({deploymentData}) {
 
     const [deploymentLog, setDeploymentLog] = useState()
     useEffect(() => {
         ( async () => {
-            const deploymentLog = await getDeploymentLog(deploymentId)
+            const deploymentLog = await getDeploymentLog(deploymentData?.id)
             setDeploymentLog(deploymentLog)
         })()
-    }, [])
+    }, [deploymentData])
     if (!deploymentLog) return <p className="w-full text-center ">Fething logs</p>
     if (!deploymentLog?.outputLog) return <p className="w-full text-center ">No logs for this deployment!</p>
     return (

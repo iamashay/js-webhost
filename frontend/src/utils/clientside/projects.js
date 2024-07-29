@@ -39,3 +39,14 @@ export const deployProject = async ({ projectId, setLoading, router }) => {
         setLoading(false)
     }
 }
+
+export const getDeployment = async (deploymentId) => {
+    const deployment = await fetch(`${API_URL}/deployments/${deploymentId}`, {
+
+        headers: {
+            'Accept': 'application/json',
+        },
+        credentials: 'include'
+    })
+    return await deployment.json()
+}
