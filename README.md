@@ -73,8 +73,8 @@ MKCert has to be used inorder to make locally signed certificates as trusted. Th
 * Run the command to build required docker images from dockerfile
   ```
   cd build-server/docker
-  docker build . -f Static.Dockerfile -t static-image;
-  docker build . -f React.Dockerfile -t react-image;
+  docker build . -f Static.Dockerfile -t static-image
+  docker build . -f React.Dockerfile -t react-image
   ```
 * Start the server with
   ```console
