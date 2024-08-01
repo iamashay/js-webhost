@@ -68,6 +68,7 @@ async function initiateContainer({gitURL, image, projectId, buildScript, localOu
     const targetPath = path.posix.join('/', 'home', 'app', 'output')
     const projectBuildCmd = 'npm run '+buildScript
     await fs.promises.rm(sourcePath, { maxRetries: 2, retryDelay: 2000, recursive: true, force: true })
+    await fs.promises.mkdir(sourcePath, {recursive: true})
     let containerCMD;
     if(image === 'static-image') {
         containerCMD = [
