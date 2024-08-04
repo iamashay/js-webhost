@@ -10,7 +10,7 @@ export default function StatusInfo({ statusDetails, currentStatus }) {
 
                 return (
                     <>
-                        <span className={`${color} rounded-md p-1 m-1 text-sm text-white `}>{status}</span> ( {text} )
+                        <span key={status} className={`${color} rounded-md p-1 m-1 text-sm text-white `}>{status}</span> ( {text} )
                     </>
                 )
             })}
