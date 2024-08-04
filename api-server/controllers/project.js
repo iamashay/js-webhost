@@ -6,7 +6,7 @@ import { getGitDetails, getUserRepoName } from "../lib/github.js";
 import { queueClient } from "../queue/queueClient.js";
 import { ZodError } from "zod";
 import { DrizzleError, and, desc, eq } from "drizzle-orm";
-import { createDeployement, updateDeploymentStatus } from "../lib/project.js";
+import { checkLatestDeployment, createDeployement, updateDeploymentStatus } from "../lib/project.js";
 const {MAX_GIT_SIZE, BUILDQUEUE} = process.env
 
 let conn, gitProducerChannel;
@@ -160,6 +160,7 @@ export const projectDeployController = async (req, res) => {
     console.log(project);
     if (!project)
       throw new Error("Some error occured, project unavailable!");
+    await checkLatestDeployment({projectId})
     const deployment = await createDeployement({id: projectId})
     project.deploymentId = deployment.id
     const projectDataString = JSON.stringify(project);

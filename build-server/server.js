@@ -43,6 +43,8 @@ const queueSys = async () => {
         ch1.ack(msg)
       } catch(err){
         localOutLogger.error("Deployment Halted")
+        console.log("Halt error: "+ err)
+
         if (err.code === "ECONNREFUSED") {
           if (deploymentId) await updateDeploymentStatus({id: deploymentId, status: "Error"})
           localOutLogger.error("Connection error: ECONNREFUSED")

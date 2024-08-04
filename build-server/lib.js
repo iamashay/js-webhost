@@ -1,6 +1,6 @@
 import {db} from '../database/db.js'
 import {projects, deployments, deploymentLogs} from '../database/schema.js'
-import { desc, eq } from "drizzle-orm";
+import { and, eq, gt, inArray, not, desc  } from "drizzle-orm";
 import { Transform, Writable } from 'node:stream';
 
 
@@ -32,15 +32,24 @@ export const uploadDeploymentLog = async ({deployment, outputLog, errorLog}) => 
 }
 
 export const checkLatestDeployment = async ({deploymentId, projectId}) => {
-    if (!deploymentId || !projectId) throw new Error("Missing check deployment values")
-    const latestDeployment = await db.query.deployments.findFirst({
-        where: eq(deployments.project, projectId),
-        orderBy: desc(deployments.createdAt)
-    })
-    console.log(latestDeployment, projectId)
-    if (latestDeployment?.id === deploymentId) return true
-    throw new Error(`${deploymentId} is not the latest deployment. Discarding it.`) 
-    //console.log(insertLogs)
+  if (!projectId) throw new Error("No project id provided")
+    const now = new Date()
+    const dateLimit = new Date(now.getTime() - 24 * 60 * 60 * 1000); //sets a range within which we check for status that are not 'Error' or 'Deployed' to halt the deployment
+    const checkDeployment = await db.query.deployments.findFirst({where: and(eq(projectId, deployments.project), gt(deployments.createdAt, dateLimit), not(inArray(deployments.status, ['Error', 'Deployed'])))})
+    console.log(checkDeployment, dateLimit)
+    if (checkDeployment && checkDeployment?.id != deploymentId) throw new Error('Deployment already in progress!')
+}
+
+export const checkOngoingDeployment = async ({deploymentId, projectId}) => {
+  if (!deploymentId || !projectId) throw new Error("Missing check deployment values")
+  const latestDeployment = await db.query.deployments.findFirst({
+      where: or(eq(deployments.project, projectId), ),
+      orderBy: desc(deployments.createdAt)
+  })
+  console.log(latestDeployment, projectId)
+  if (latestDeployment?.id === deploymentId) return true
+  throw new Error(`${deploymentId} is not the latest deployment. Discarding it.`) 
+  //console.log(insertLogs)
 }
 
 export class StreamLogger extends Transform {

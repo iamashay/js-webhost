@@ -7,7 +7,7 @@ import {updateDeploymentStatus, StreamLogger, getGitDetails, getUserRepoName} fr
 import { uploadFiles } from './S3.js';
 import { logger } from './logger.js';
 
-const {DOCKER_HOST, DOCKER_PORT, DOCKER_PROTOCOL, DOCKER_VERSION} = process.env
+const {DOCKER_HOST, DOCKER_PORT, DOCKER_PROTOCOL, DOCKER_VERSION, BUILD_PATH} = process.env
 const MAX_UPTIME = 300
 const DOCKER_LIMIT = 2
 const docker = new Docker({
@@ -64,7 +64,7 @@ async function initiateContainer({gitURL, image, projectId, buildScript, localOu
     const errStream = new StreamLogger(localOutLogger, "error", "console")
 
     try {
-    const sourcePath = path.join('I:', 'Temp', projectId)
+    const sourcePath = path.join(BUILD_PATH, projectId)
     const targetPath = path.posix.join('/', 'home', 'app', 'output')
     const projectBuildCmd = 'npm run '+buildScript
     await fs.promises.rm(sourcePath, { maxRetries: 2, retryDelay: 2000, recursive: true, force: true })
@@ -90,7 +90,7 @@ async function initiateContainer({gitURL, image, projectId, buildScript, localOu
             //Env,
             Tty: false,
             HostConfig: {
-                Memory: 2e+8,
+                Memory: 6e+8,
                 AutoRemove: true,
                 Mounts: [
                   {
@@ -100,6 +100,7 @@ async function initiateContainer({gitURL, image, projectId, buildScript, localOu
                     ReadOnly: false,
                   },
                 ],
+                DiskQuota: 1,
             },
         },
     )
